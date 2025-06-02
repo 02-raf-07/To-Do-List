@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>To-Do List with Progress & History Toggle</title>
+<style>
+  :root {
+    --color-bg-light: #f9f9f9;
+    --color-bg-dark: #121212;
+    --color-text-light: #222;
+    --color-text-dark: #ddd;
+    --color-primary: #007bff;
+    --color-primary-dark: #3399ff;
+    --color-success: #28a745;
+    --color-danger: #dc3545;
+    --color-muted-light: #6c757d;
+    --color-muted-dark: #999;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body.light {
+    background: var(--color-bg-light);
+    color: var(--color-text-light);
+  }
+  body.dark {
+    background: var(--color-bg-dark);
+    color: var(--color-text-dark);
+  }
+
+  body, input, button {
+    font-family: var(--font-family);
+  }
+
+  .container {
+    max-width: 700px;
+    margin: 2rem auto;
+    background: inherit;
+    padding: 2rem 2.5rem 3rem;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+  }
+
+  header h1 {
+    font-weight: 700;
+    font-size: 2.3rem;
+  }
+
+  .theme-switch {
+    background: var(--color-primary);
+    border: none;
+    padding: 0.4rem 1.1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  .theme-switch:hover,
+  .theme-switch:focus {
+    background: var(--color-primary-dark);
+    outline: none;
+  }
+
+  form {
+    display: flex;
+    gap: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+
+  input[type="text"] {
+    flex-grow: 1;
+    font-size: 1.15rem;
+    padding: 0.65rem 1rem;
+    border-radius: 6px;
+    border: 1.8px solid #ccc;
+    transition: border-color 0.3s ease;
+  }
+  input[type="text"]:focus {
+    border-color: var(--color-primary);
+    outline: none;
+  }
+
+  button#addTaskBtn {
+    background: var(--color-success);
+    border: none;
+    border-radius: 50%;
+    font-size: 2rem;
+    width: 52px;
+    height: 52px;
+    line-height: 1;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  button#addTaskBtn:hover,
+  button#addTaskBtn:focus {
+    background: #218838;
+    outline: none;
+  }
+
+  #taskHelp {
+    font-size: 0.85rem;
+    color: var(--color-muted-light);
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .filters {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .filter-btn {
+    background: transparent;
+    border: 1.5px solid var(--color-primary);
+    border-radius: 6px;
+    padding: 0.3rem 0.9rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-primary);
+    user-select: none;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  .filter-btn:hover,
+  .filter-btn:focus {
+    background: var(--color-primary);
+    color: white;
+    outline: none;
+  }
+  .filter-btn.active {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  button#clearCompleted {
+    background: var(--color-danger);
+    border: none;
+    border-radius: 6px;
+    padding: 0.45rem 1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  button#clearCompleted:hover,
+  button#clearCompleted:focus {
+    background: #c9302c;
+    outline: none;
+  }
+
+  /* Task List */
+  ul.task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+  }
+
+  li.task-item {
+    background: var(--color-bg-light);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+  }
+  body.dark li.task-item {
+    background: #1e1e1e;
+    box-shadow: 0 2px 6px rgba(255,255,255,0.05);
+  }
+
+  li.task-item.completed .task-title {
+    text-decoration: line-through;
+    color: var(--color-muted-light);
+  }
+
+  .task-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .task-checkbox {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .task-title {
+    flex-grow: 1;
+    font-size: 1.12rem;
+    font-weight: 600;
+    min-height: 1.3rem;
+    cursor: text;
+  }
+  .task-title:focus {
+    outline: 2px solid var(--color-primary);
+    border-radius: 4px;
+  }
+
+  .task-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  button.task-btn {
+    background: var(--color-danger);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    color: white;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    user-select: none;
+  }
+  button.task-btn:hover,
+  button.task-btn:focus {
+    background: #b02a37;
+    outline: none;
+  }
+
+  /* Subtasks */
+  ul.subtasks {
+    list-style: none;
+    padding-left: 1.5rem;
+    margin-top: 0.7rem;
+  }
+  ul.subtasks li.task-item {
+    background: var(--color-bg-light);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.9rem;
+    box-shadow: none;
+  }
+  body.dark ul.subtasks li.task-item {
+    background: #292929;
+  }
+  ul.subtasks li.task-item.completed .task-title {
+    color: var(--color-muted-light);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 7px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  body.dark .progress-bar {
+    background: #333;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--color-success);
+    transition: width 0.3s ease;
+  }
+
+  /* History Section */
+  h2 {
+    margin-top: 1.2rem;
+    font-weight: 700;
+  }
+
+  #historyToggleBtn {
+    background: var(--color-primary);
+    border: none;
+    border-radius: 20px;
+    padding: 0.4rem 1.1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 1rem;
+    transition: background 0.3s ease;
+  }
+  #historyToggleBtn:hover,
+  #historyToggleBtn:focus {
+    background: var(--color-primary-dark);
+    outline: none;
+  }
+
+  .history-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 0.8rem 1rem;
+    background: var(--color-bg-light);
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+  }
+  body.dark .history-list {
+    background: #1e1e1e;
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.1);
+  }
+
+  .history-item {
+    border-bottom: 1px solid #ccc;
+    padding: 0.35rem 0;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-muted-light);
+  }
+  body.dark .history-item {
+    border-color: #444;
+    color: var(--color-muted-dark);
+  }
+
+  /* Scrollbar */
+  .history-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  .history-list::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 4px;
+  }
+  .history-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+</style>
+</head>
+<body class="light">
+<div class="container" role="main" aria-label="To-Do List Application">
+
+  <header>
+    <h1>To-Do List</h1>
+    <button id="themeToggle" class="theme-switch" aria-pressed="false" aria-label="Toggle Dark/Light Theme">Dark Mode</button>
+  </header>
+
+  <form id="taskForm" aria-label="Add new task form">
+    <input type="text" id="taskInput" aria-label="Task title input" placeholder="Add new task..." autocomplete="off" required />
+    <button id="addTaskBtn" aria-label="Add task" type="submit">+</button>
+  </form>
+  <small id="taskHelp">Press Enter or click + to add task</small>
+
+  <div class="controls" role="region" aria-label="Task filters and actions">
+    <div class="filters" role="group" aria-label="Filter tasks">
+      <button class="filter-btn active" aria-pressed="true" data-filter="all" type="button">All</button>
+      <button class="filter-btn" aria-pressed="false" data-filter="active" type="button">Active</button>
+      <button class="filter-btn" aria-pressed="false" data-filter="completed" type="button">Completed</button>
+    </div>
+    <button id="clearCompleted" type="button" aria-label="Clear completed tasks">Clear Completed</button>
+  </div>
+
+  <ul class="task-list" id="taskList" aria-live="polite" aria-relevant="additions removals"></ul>
+
+  <button id="historyToggleBtn" aria-expanded="true" aria-controls="historySection" aria-label="Show or hide task history">Hide History</button>
+  <section id="historySection" aria-live="polite">
+    <h2>History (Tasks Completed)</h2>
+    <div class="history-list" id="historyList"></div>
+  </section>
+</div>
+
+<script>
+  const taskForm = document.getElementById('taskForm');
+  const taskInput = document.getElementById('taskInput');
+  const taskList = document.getElementById('taskList');
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const clearCompletedBtn = document.getElementById('clearCompleted');
+  const themeToggleBtn = document.getElementById('themeToggle');
+  const historyToggleBtn = document.getElementById('historyToggleBtn');
+  const historySection = document.getElementById('historySection');
+  const historyList = document.getElementById('historyList');
+
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+  let history = JSON.parse(localStorage.getItem('history')) || [];
+  let currentFilter = 'all';
+
+  // Toggle dark/light theme
+  themeToggleBtn.addEventListener('click', () => {
+    if(document.body.classList.contains('light')) {
+      document.body.classList.replace('light', 'dark');
+      themeToggleBtn.textContent = 'Light Mode';
+      themeToggleBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      document.body.classList.replace('dark', 'light');
+      themeToggleBtn.textContent = 'Dark Mode';
+      themeToggleBtn.setAttribute('aria-pressed', 'false');
+    }
+  });
+
+  // Toggle history section visibility
+  historyToggleBtn.addEventListener('click', () => {
+    const expanded = historyToggleBtn.getAttribute('aria-expanded') === 'true';
+    if (expanded) {
+      historySection.style.display = 'none';
+      historyToggleBtn.textContent = 'Show History';
+      historyToggleBtn.setAttribute('aria-expanded', 'false');
+    } else {
+      historySection.style.display = 'block';
+      historyToggleBtn.textContent = 'Hide History';
+      historyToggleBtn.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  function saveData() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('history', JSON.stringify(history));
+  }
+
+  // Calculate progress % for subtasks
+  function calcProgress(task) {
+    if(!task.subtasks.length) return 0;
+    const completed = task.subtasks.filter(st => st.completed).length;
+    return Math.round((completed / task.subtasks.length) * 100);
+  }
+
+  function createTaskElement(task, isSubtask = false) {
+    const li = document.createElement('li');
+    li.className = 'task-item';
+    if(task.completed) li.classList.add('completed');
+    li.setAttribute('data-id', task.id);
+
+    // Header div
+    const header = document.createElement('div');
+    header.className = 'task-header';
+
+    // Checkbox
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-checkbox';
+    checkbox.checked = task.completed;
+    checkbox.setAttribute('aria-label', `Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`);
+    checkbox.addEventListener('change', () => {
+      toggleComplete(task.id, isSubtask);
+    });
+    header.appendChild(checkbox);
+
+    // Editable title
+    const title = document.createElement('div');
+    title.className = 'task-title';
+    title.contentEditable = true;
+    title.spellcheck = false;
+    title.textContent = task.title;
+    title.setAttribute('tabindex', '0');
+    title.setAttribute('aria-label', `Edit task title: ${task.title}`);
+    title.addEventListener('blur', () => {
+      const newTitle = title.textContent.trim();
+      if(newTitle) {
+        updateTaskTitle(task.id, newTitle, isSubtask);
+      } else {
+        title.textContent = task.title; // revert empty edit
+      }
+    });
+    header.appendChild(title);
+
+    // Actions container
+    const actions = document.createElement('div');
+    actions.className = 'task-actions';
+
+    // Subtask add button (only for parent tasks)
+    if(!isSubtask) {
+      const addSubtaskBtn = document.createElement('button');
+      addSubtaskBtn.className = 'task-btn';
+      addSubtaskBtn.title = 'Add Subtask';
+      addSubtaskBtn.innerHTML = '+';
+      addSubtaskBtn.setAttribute('aria-label', `Add subtask to "${task.title}"`);
+      addSubtaskBtn.addEventListener('click', () => {
+        addSubtask(task.id);
+      });
+      actions.appendChild(addSubtaskBtn);
+    }
+
+    // Delete button
+    const delBtn = document.createElement('button');
+    delBtn.className = 'task-btn';
+    delBtn.title = 'Delete Task';
+    delBtn.innerHTML = '&times;';
+    delBtn.setAttribute('aria-label', `Delete task "${task.title}"`);
+    delBtn.addEventListener('click', () => {
+      if(confirm(`Delete task "${task.title}"? This will also delete subtasks.`)) {
+        deleteTask(task.id, isSubtask);
+      }
+    });
+    actions.appendChild(delBtn);
+
+    header.appendChild(actions);
+    li.appendChild(header);
+
+    // Subtasks list and progress bar for parent tasks
+    if(task.subtasks && task.subtasks.length) {
+      const progressBar = document.createElement('div');
+      progressBar.className = 'progress-bar';
+      const fill = document.createElement('div');
+      fill.className = 'progress-fill';
+      fill.style.width = calcProgress(task) + '%';
+      fill.setAttribute('aria-label', `Subtasks completion: ${calcProgress(task)}%`);
+      progressBar.appendChild(fill);
+      li.appendChild(progressBar);
+
+      const subtaskList = document.createElement('ul');
+      subtaskList.className = 'subtasks';
+      task.subtasks.forEach(st => {
+        subtaskList.appendChild(createTaskElement(st, true));
+      });
+      li.appendChild(subtaskList);
+    }
+
+    return li;
+  }
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    let filteredTasks;
+    if(currentFilter === 'all') filteredTasks = tasks;
+    else if(currentFilter === 'active') filteredTasks = tasks.filter(t => !t.completed);
+    else filteredTasks = tasks.filter(t => t.completed);
+
+    filteredTasks.forEach(task => {
+      taskList.appendChild(createTaskElement(task));
+    });
+
+    renderHistory();
+  }
+
+  function toggleComplete(id, isSubtask = false) {
+    if(isSubtask) {
+      tasks.forEach(task => {
+        const st = task.subtasks.find(s => s.id === id);
+        if(st) {
+          st.completed = !st.completed;
+          if(st.completed) addToHistory(st.title);
+          else removeFromHistory(st.title);
+        }
+      });
+    } else {
+      const task = tasks.find(t => t.id === id);
+      if(task) {
+        task.completed = !task.completed;
+        if(task.completed) addToHistory(task.title);
+        else removeFromHistory(task.title);
+      }
+    }
+    saveData();
+    renderTasks();
+  }
+
+  function addSubtask(parentId) {
+    const title = prompt('Subtask title:');
+    if(title && title.trim()) {
+      const parentTask = tasks.find(t => t.id === parentId);
+      if(parentTask) {
+        parentTask.subtasks.push({
+          id: Date.now(),
+          title: title.trim(),
+          completed: false,
+          subtasks: []
+        });
+        saveData();
+        renderTasks();
+      }
+    }
+  }
+
+  function updateTaskTitle(id, newTitle, isSubtask = false) {
+    if(isSubtask) {
+      tasks.forEach(task => {
+        const st = task.subtasks.find(s => s.id === id);
+        if(st) st.title = newTitle;
+      });
+    } else {
+      const task = tasks.find(t => t.id === id);
+      if(task) task.title = newTitle;
+    }
+    saveData();
+    renderTasks();
+  }
+
+  function deleteTask(id, isSubtask = false) {
+    if(isSubtask) {
+      tasks.forEach(task => {
+        task.subtasks = task.subtasks.filter(s => s.id !== id);
+      });
+    } else {
+      tasks = tasks.filter(t => t.id !== id);
+    }
+    saveData();
+    renderTasks();
+  }
+
+  function addToHistory(title) {
+    if(!history.includes(title)) {
+      history.push(title);
+    }
+  }
+
+  function removeFromHistory(title) {
+    history = history.filter(h => h !== title);
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    history.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.textContent = item;
+      historyList.appendChild(div);
+    });
+  }
+
+  // Form submit
+  taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = taskInput.value.trim();
+    if(title) {
+      tasks.push({
+        id: Date.now(),
+        title,
+        completed: false,
+        subtasks: []
+      });
+      taskInput.value = '';
+      saveData();
+      renderTasks();
+    }
+  });
+
+  // Filter buttons
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      currentFilter = btn.dataset.filter;
+      renderTasks();
+    });
+  });
+
+  // Clear completed tasks
+  clearCompletedBtn.addEventListener('click', () => {
+    tasks = tasks.filter(t => !t.completed);
+    tasks.forEach(t => {
+      t.subtasks = t.subtasks.filter(st => !st.completed);
+    });
+    saveData();
+    renderTasks();
+  });
+
+  // Initial render
+  renderTasks();
+</script>
+</body>
+</html>
